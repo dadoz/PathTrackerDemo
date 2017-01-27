@@ -16,6 +16,7 @@ import android.widget.TextView;
 
 import com.application.i21lab.pathtrackerdemo.helpers.JsonParser;
 import com.application.i21lab.pathtrackerdemo.helpers.RequestPermissionHelper;
+import com.application.i21lab.pathtrackerdemo.httpClient.NetworkTask;
 import com.application.i21lab.pathtrackerdemo.models.Direction;
 import com.application.i21lab.pathtrackerdemo.models.Step;
 import com.application.i21lab.pathtrackerdemo.utils.MapsUtils;
@@ -32,14 +33,16 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
+import static android.R.attr.key;
 
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
-        RequestPermissionHelper.RequestPermissionCallbacks {
+        RequestPermissionHelper.RequestPermissionCallbacks, NetworkTask.OnCompleteCallbacks {
 
     private static final int MY_LOCATION_REQUEST_CODE = 9999;
     private GoogleMap map;
@@ -164,21 +167,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         map.moveCamera(CameraUpdateFactory.newLatLng(currentLocation));
         map.setMinZoomPreference(6);
 
-        String jsonString = JsonParser.getJsonFromAssets(getAssets(), "json/direction_track.json");
-        Object direction = JsonParser.parse(jsonString, "direction");
-        if (direction == null) {
-            //handle error
-            return;
-        }
-
-        //set polyline to handle direction
-        map.addPolyline(new PolylineOptions()
-                .add(currentLocation)
-                .addAll(MapsUtils.getLatLngList((Direction) direction))
-                .width(5)
-                .color(Color.BLUE)
-                .geodesic(true));
-
+//        String jsonString = JsonParser.getJsonFromAssets(getAssets(), "json/direction_track.json");
+        new NetworkTask(new WeakReference<NetworkTask.OnCompleteCallbacks>(this), currentLocation, LUGANO)
+                .execute("https://maps.googleapis.com/maps/api/directions/json");
         //TEST
         if (lastLocation != null) {
             latitudeView.setText(String.valueOf(lastLocation.getLatitude()));
@@ -195,5 +186,24 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onPermissionGrantedFailureCb() {
         Snackbar.make(getWindow().getDecorView(), "Error on grant permission",
                 Snackbar.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onSuccessCb(String jsonString, LatLng currentLocation) {
+        Log.e(TAG, "hey");
+        Log.e(TAG, jsonString);
+        Object direction = JsonParser.parse(jsonString, "direction");
+
+        if (direction != null) {
+            //set polyline to handle direction
+            map.addPolyline(new PolylineOptions()
+                    .add(currentLocation)
+                    .addAll(MapsUtils.getLatLngList((Direction) direction))
+                    .width(5)
+                    .color(Color.RED)
+                    .geodesic(true));
+        }
+
+
     }
 }

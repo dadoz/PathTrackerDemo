@@ -1,6 +1,5 @@
 package com.application.i21lab.pathtrackerdemo.utils;
 
-import android.graphics.Path;
 import android.support.annotation.NonNull;
 
 import com.application.i21lab.pathtrackerdemo.models.Direction;
@@ -59,4 +58,10 @@ public class MapsUtils {
         return path;
     }
 
+    public static String buildUrl(LatLng currentLocation, LatLng lugano) {
+        return "https://maps.googleapis.com/maps/api/directions/json" +
+                "?origin=" + currentLocation.latitude + "," + currentLocation.longitude +
+                "&destination=" + lugano.latitude + "," + lugano.longitude +
+                "&key=" + "AIzaSyA_Z8BF_fESeP7vfK4scnnbK9NbWdVmqME";
+    }
 }

@@ -53,6 +53,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private String TAG = "TAG";
 
     private static final LatLng LUGANO = new LatLng(46.03629, 8.954198);
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -160,17 +161,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             return;
         }
 
-        Log.e(TAG, "hye prepare location");
+        //set up current location
         LatLng currentLocation = new LatLng(lastLocation.getLatitude(),lastLocation.getLongitude());
 
         //set position on my current location
         map.moveCamera(CameraUpdateFactory.newLatLng(currentLocation));
-        map.setMinZoomPreference(6);
+        map.setMinZoomPreference(8);
 
 //        String jsonString = JsonParser.getJsonFromAssets(getAssets(), "json/direction_track.json");
-        new NetworkTask(new WeakReference<NetworkTask.OnCompleteCallbacks>(this), currentLocation, LUGANO)
-                .execute("https://maps.googleapis.com/maps/api/directions/json");
-        //TEST
+        new NetworkTask(new WeakReference<NetworkTask.OnCompleteCallbacks>(this), currentLocation)
+                .execute(MapsUtils.buildUrl(currentLocation, LUGANO));
+
+        //TEST TODO rm it
         if (lastLocation != null) {
             latitudeView.setText(String.valueOf(lastLocation.getLatitude()));
             longitudeView.setText(String.valueOf(lastLocation.getLongitude()));
@@ -190,8 +192,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onSuccessCb(String jsonString, LatLng currentLocation) {
-        Log.e(TAG, "hey");
-        Log.e(TAG, jsonString);
         Object direction = JsonParser.parse(jsonString, "direction");
 
         if (direction != null) {
@@ -199,8 +199,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             map.addPolyline(new PolylineOptions()
                     .add(currentLocation)
                     .addAll(MapsUtils.getLatLngList((Direction) direction))
-                    .width(5)
-                    .color(Color.RED)
+                    .width(10)
+                    .color(ContextCompat.getColor(getBaseContext(), R.color.colorPrimary))
                     .geodesic(true));
         }
 

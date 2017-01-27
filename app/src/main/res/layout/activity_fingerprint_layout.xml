@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="@dimen/padding_16"
+    android:background="@color/colorPrimary">
+    <TextView
+        android:id="@+id/textFingerprintLabelId"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/padding_64"
+        android:gravity="center_horizontal"
+        android:text="@string/fingerprint_label"
+        android:textSize="@dimen/text_size_18"
+        android:textColor="@color/grey_50"/>
+    <ImageView
+
+        android:id="@+id/fingerprintIconId"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:src="@drawable/ic_fingerprint_white_18dp"/>
+</RelativeLayout>

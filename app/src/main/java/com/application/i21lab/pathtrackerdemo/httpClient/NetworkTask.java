@@ -20,22 +20,16 @@ import static android.R.attr.key;
 public class NetworkTask extends AsyncTask<String, Void, String> {
     private final WeakReference<OnCompleteCallbacks> listener;
     private final LatLng currentLocation;
-    private final LatLng destinationLocation;
 
-    public NetworkTask(WeakReference<OnCompleteCallbacks> lst, LatLng from, LatLng to) {
+    public NetworkTask(WeakReference<OnCompleteCallbacks> lst, LatLng from) {
         listener = lst;
         this.currentLocation = from;
-        this.destinationLocation = to;
     }
     @Override
     protected String doInBackground(String... params) {
         StringBuffer chaine = new StringBuffer("");
         try{
-            String urlString = params[0] +
-                    "?origin=" + currentLocation.latitude + "," + currentLocation.longitude +
-                    "&destination=" + destinationLocation.latitude + "," + destinationLocation.longitude +
-                    "&key=" + "AIzaSyA_Z8BF_fESeP7vfK4scnnbK9NbWdVmqME";
-            URL url = new URL(urlString);
+            URL url = new URL(params[0]);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 //            connection.setRequestProperty("User-Agent", "");
             connection.setRequestMethod("GET");

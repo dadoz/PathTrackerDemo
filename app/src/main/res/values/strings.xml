@@ -2,4 +2,7 @@
     <string name="app_name">PathTrackerDemo</string>
     <string name="title_activity_main">PathTrackerDemo</string>
     <string name="title_activity_auth">Auth</string>
+    <string name="fingerprint_label">Put the finger on the sensor and lift after you feel a vibration</string>
+    <string name="pincode_hint">insert your pin code</string>
+    <string name="pincode_label">Insert your pin code to get logged in.</string>
 </resources>

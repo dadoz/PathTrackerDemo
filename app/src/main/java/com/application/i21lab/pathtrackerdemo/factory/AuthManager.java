@@ -1,7 +1,14 @@
 package com.application.i21lab.pathtrackerdemo.factory;
 
-/**
- * Created by davide on 27/01/2017.
- */
+import android.content.Context;
+
+import java.lang.ref.WeakReference;
+
 public interface AuthManager {
+    void auth(WeakReference<Context> context, int code);
+    interface Callbacks {
+        void authSuccessCallback();
+        void authFailedCallback(String message);
+    }
 }
+

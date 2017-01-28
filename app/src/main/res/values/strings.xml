@@ -5,4 +5,7 @@
     <string name="fingerprint_label">Put the finger on the sensor and lift after you feel a vibration</string>
     <string name="pincode_hint">insert your pin code</string>
     <string name="pincode_label">Insert your pin code to get logged in.</string>
+    <string name="auth_button_label">AUTH</string>
+    <string name="bad_auth_message">Oh Snap! You\'re not authorized. Please try to login back.</string>
+    <string name="hello">Hello</string>
 </resources>

@@ -1,13 +1,11 @@
 package com.application.i21lab.pathtrackerdemo;
 
-import android.Manifest;
+import android.app.Activity;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityCompat;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -18,33 +16,27 @@ import com.application.i21lab.pathtrackerdemo.helpers.JsonParser;
 import com.application.i21lab.pathtrackerdemo.helpers.RequestPermissionHelper;
 import com.application.i21lab.pathtrackerdemo.httpClient.NetworkTask;
 import com.application.i21lab.pathtrackerdemo.models.Direction;
-import com.application.i21lab.pathtrackerdemo.models.Step;
 import com.application.i21lab.pathtrackerdemo.utils.MapsUtils;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
-import static android.R.attr.key;
+import static com.application.i21lab.pathtrackerdemo.helpers.RequestPermissionHelper.COARSE_LOCATION_REQUEST_CODE;
 
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
         RequestPermissionHelper.RequestPermissionCallbacks, NetworkTask.OnCompleteCallbacks {
 
-    private static final int MY_LOCATION_REQUEST_CODE = 9999;
     private GoogleMap map;
     private GoogleApiClient client;
     private Location lastLocation;
@@ -100,7 +92,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         //todo weak ref on list
-        RequestPermissionHelper.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
+        RequestPermissionHelper.onRequestPermissionsResult(requestCode, permissions, grantResults,
+                new WeakReference<RequestPermissionHelper.RequestPermissionCallbacks>(this));
     }
 
 
@@ -129,7 +122,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        if (!RequestPermissionHelper.requestPermission(this)) {
+        if (!RequestPermissionHelper.requestPermission(new WeakReference<Activity>(this),
+                ACCESS_COARSE_LOCATION , COARSE_LOCATION_REQUEST_CODE)) {
             return;
         }
 

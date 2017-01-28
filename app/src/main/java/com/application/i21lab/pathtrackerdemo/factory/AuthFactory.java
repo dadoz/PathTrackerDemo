@@ -10,21 +10,23 @@ public class AuthFactory {
     /**
      *
      * @param context
+     * @param lst
      * @return
      */
-    public static AuthManager getAuthManager(WeakReference<Context> context) {
-        if (context.get() == null) {
-            return new PincodeManager();
+    public static AuthManager getAuthManager(WeakReference<Context> context,
+                                             WeakReference<AuthManager.Callbacks> lst) {
+        if (context.get() != null &&
+                isFingerprintEnabled(context)) {
+            return new FingerprintManager(lst);
         }
-
-        if (FingerprintManagerCompat.from(context.get())
-                .isHardwareDetected() && FingerprintManagerCompat.from(context.get())
-                .hasEnrolledFingerprints()) {
-            return new FingerprintManager();
-        }
-        return new PincodeManager();
+        return new PincodeManager(lst);
     }
 
+    /**
+     *
+     * @param context
+     * @return
+     */
     public static boolean isFingerprintEnabled(WeakReference<Context> context) {
         return context.get() != null &&
                 FingerprintManagerCompat.from(context.get()).isHardwareDetected() &&

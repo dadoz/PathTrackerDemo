@@ -1,7 +1,9 @@
 package com.application.i21lab.pathtrackerdemo;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.pm.PackageManager;
+import android.graphics.Path;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -32,9 +34,7 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import java.lang.ref.WeakReference;
 
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
-import static android.Manifest.permission.USE_FINGERPRINT;
 import static com.application.i21lab.pathtrackerdemo.helpers.RequestPermissionHelper.COARSE_LOCATION_REQUEST_CODE;
-import static com.application.i21lab.pathtrackerdemo.helpers.RequestPermissionHelper.FINGERPRINT_REQUEST_CODE;
 
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
@@ -44,30 +44,24 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private GoogleMap map;
     private GoogleApiClient client;
     private Location lastLocation;
-    private TextView longitudeView;
-    private TextView latitudeView;
     private String TAG = "TAG";
 
     private static final LatLng LUGANO = new LatLng(46.03629, 8.954198);
+    private String DIRECTION_BUNDLE_KEY = "DIRECTION_BUNDLE_KEY";
+    private static final String CURRENT_LOCATION_BUNDLE_KEY = "CURRENT_LOCATION_BUNDLE_KEY";
+    private Direction direction;
+    private LatLng currentLocation;
+    private Bundle stateBundle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        getSupportActionBar().setTitle("map");
+        getSupportActionBar().setTitle(R.string.map_title);
+        stateBundle = savedInstanceState;
 
-        RequestPermissionHelper.requestPermission(new WeakReference<Activity>(this),
-                USE_FINGERPRINT, FINGERPRINT_REQUEST_CODE);
-
-            initMap();
+        initMap();
         buildGoogleApiClient();
-        initView();
-    }
-
-    /**
-     *
-     */
-    private void initView() {
     }
 
     /**
@@ -105,7 +99,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap googleMap) {
         map = googleMap;
-//        requestPermission();
     }
 
     @Override
@@ -127,14 +120,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onConnected(@Nullable Bundle bundle) {
-        if (!RequestPermissionHelper.requestPermission(new WeakReference<Activity>(this),
+        if (RequestPermissionHelper.requestPermission(new WeakReference<Activity>(this),
                 ACCESS_COARSE_LOCATION , COARSE_LOCATION_REQUEST_CODE)) {
             return;
         }
 
-        Log.e(TAG, "Hye correct");
-        //permission already granted
-        setLocationOnMap();
+        initLocationOnMap();
     }
 
 
@@ -160,29 +151,60 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     /**
      *
      */
-    private void setLocationOnMap() {
-        if (lastLocation == null ||
-                map == null) {
+    private void initLocationOnMap() {
+        Log.e(TAG, "Hey" + (stateBundle != null ? "bundle" : "empty"));
+
+        if (stateBundle != null) {
+            setCurrentLocationOnMap();
+            handlePlotDirection();
             return;
         }
+
         lastLocation = LocationServices.FusedLocationApi.getLastLocation(client);
+        if (lastLocation != null) {
+            Log.e(TAG, "Hey");
+            //set up current location
+            currentLocation = new LatLng(lastLocation.getLatitude(),lastLocation.getLongitude());
+            setCurrentLocationOnMap();
+
+            //retrieve direction
+            new NetworkTask(new WeakReference<NetworkTask.OnCompleteCallbacks>(this), currentLocation)
+                    .execute(MapsUtils.buildUrl(currentLocation, LUGANO));
+        }
+    }
+
+    /**
+     * set current location
+     */
+    private void setCurrentLocationOnMap() {
+        if (currentLocation == null) {
+            return;
+        }
         map.setMyLocationEnabled(true);
-
-        //set up current location
-        LatLng currentLocation = new LatLng(lastLocation.getLatitude(),lastLocation.getLongitude());
-
         //set position on my current location
         map.moveCamera(CameraUpdateFactory.newLatLng(currentLocation));
         map.setMinZoomPreference(8);
-
-//        String jsonString = JsonParser.getJsonFromAssets(getAssets(), "json/direction_track.json");
-        new NetworkTask(new WeakReference<NetworkTask.OnCompleteCallbacks>(this), currentLocation)
-                .execute(MapsUtils.buildUrl(currentLocation, LUGANO));
     }
 
+    /**
+     * plot direction on map
+     */
+    private void handlePlotDirection() {
+        setProgressbar(false);
+        if (direction != null) {
+            //set polyline to handle direction
+            map.addPolyline(new PolylineOptions()
+                    .add(currentLocation)
+                    .addAll(MapsUtils.getLatLngList(direction))
+                    .width(10)
+                    .color(ContextCompat.getColor(getBaseContext(), R.color.colorPrimary))
+                    .geodesic(true));
+        }
+
+    }
     @Override
     public void onPermissionGrantedSuccessCb() {
-        setLocationOnMap();
+        initLocationOnMap();
     }
 
     @Override
@@ -195,24 +217,33 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     @Override
-    public void onSuccessCb(String jsonString, LatLng currentLocation) {
-        Object direction = JsonParser.parse(jsonString, "direction");
-        setProgressbar(false);
-
-        if (direction != null) {
-            //set polyline to handle direction
-            map.addPolyline(new PolylineOptions()
-                    .add(currentLocation)
-                    .addAll(MapsUtils.getLatLngList((Direction) direction))
-                    .width(10)
-                    .color(ContextCompat.getColor(getBaseContext(), R.color.colorPrimary))
-                    .geodesic(true));
+    public void onSuccessCb(String jsonString, LatLng currLoc) {
+        Object decodedDirection = JsonParser.parse(jsonString, "direction");
+        if (decodedDirection != null) {
+            direction = (Direction) decodedDirection;
+            handlePlotDirection();
         }
     }
+
+
 
     public void setProgressbar(boolean isSet) {
         View view = findViewById(R.id.mapProgressbarId);
         if (view != null)
             view.setVisibility(isSet ? View.VISIBLE : View.GONE);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putParcelable(CURRENT_LOCATION_BUNDLE_KEY, currentLocation);
+        outState.putParcelable(DIRECTION_BUNDLE_KEY, direction);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        direction = (Direction) savedInstanceState.get(DIRECTION_BUNDLE_KEY);
+        currentLocation = (LatLng) savedInstanceState.get(CURRENT_LOCATION_BUNDLE_KEY);
     }
 }

@@ -4,6 +4,7 @@ import android.content.res.AssetManager;
 import android.support.annotation.NonNull;
 
 import com.application.i21lab.pathtrackerdemo.models.Direction;
+import com.application.i21lab.pathtrackerdemo.models.Polyline;
 import com.application.i21lab.pathtrackerdemo.models.Step;
 
 import org.json.JSONArray;
@@ -77,7 +78,7 @@ public class JsonParser {
                     .getJSONArray("legs").get(0)).getJSONArray("steps");
             for (int i = 0; i < stepsArray.length(); i++) {
                 JSONObject step = (JSONObject) stepsArray.get(i);
-                stepList.add(new Step(new Step.Polyline(step.getJSONObject("polyline").getString("points"))));
+                stepList.add(new Step(new Polyline(step.getJSONObject("polyline").getString("points"))));
             }
             direction.setSteps(stepList);
         } catch (Exception e) {

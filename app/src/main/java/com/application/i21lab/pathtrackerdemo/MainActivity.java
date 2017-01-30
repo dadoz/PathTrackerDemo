@@ -68,8 +68,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
      *
      */
     private void initView() {
-        longitudeView = (TextView) findViewById(R.id.longitudeViewId);
-        latitudeView = (TextView) findViewById(R.id.latitudeViewId);
     }
 
     /**

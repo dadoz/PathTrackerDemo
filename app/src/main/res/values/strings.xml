@@ -13,4 +13,5 @@
     <string name="map_title">Map</string>
     <string name="no_internet_connection">No internet connection!</string>
     <string name="ENABLE_CONNECTION">ENABLE</string>
+    <string name="lugano_position">Lugano</string>
 </resources>

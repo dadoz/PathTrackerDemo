@@ -11,6 +11,9 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
+        buildConfigField "String", "MAPS_URL", "https://maps.googleapis.com/maps/api/directions/json"
+        buildConfigField "String", "MAPS_AUTH_KEY", "AIzaSyA_Z8BF_fESeP7vfK4scnnbK9NbWdVmqME"
+
     }
 
     signingConfigs {

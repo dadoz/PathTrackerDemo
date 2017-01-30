@@ -31,6 +31,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.lang.ref.WeakReference;
@@ -52,7 +53,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final LatLng LUGANO = new LatLng(46.03629, 8.954198);
     private String DIRECTION_BUNDLE_KEY = "DIRECTION_BUNDLE_KEY";
     private static final String CURRENT_LOCATION_BUNDLE_KEY = "CURRENT_LOCATION_BUNDLE_KEY";
-    private static final int WIFI_REQ_CODE = 222;
     private Direction direction;
     private LatLng currentLocation;
     private Bundle stateBundle;
@@ -114,6 +114,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap googleMap) {
         map = googleMap;
+        map.addMarker(new MarkerOptions()
+                .position(LUGANO)
+                .title(getString(R.string.lugano_position)));
     }
 
     @Override

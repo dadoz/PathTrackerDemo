@@ -2,6 +2,7 @@ package com.application.i21lab.pathtrackerdemo.utils;
 
 import android.support.annotation.NonNull;
 
+import com.application.i21lab.pathtrackerdemo.BuildConfig;
 import com.application.i21lab.pathtrackerdemo.models.Direction;
 import com.application.i21lab.pathtrackerdemo.models.Step;
 import com.google.android.gms.maps.model.LatLng;
@@ -10,6 +11,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MapsUtils {
+    /**
+     *
+     * @param direction
+     * @return
+     */
     public static ArrayList<LatLng> getLatLngList(@NonNull Direction direction) {
         ArrayList<LatLng> latLngList = new ArrayList<>();
         for (Step item : ((Direction) direction).getSteps()) {
@@ -58,10 +64,16 @@ public class MapsUtils {
         return path;
     }
 
+    /**
+     *
+     * @param currentLocation
+     * @param lugano
+     * @return
+     */
     public static String buildUrl(LatLng currentLocation, LatLng lugano) {
-        return "https://maps.googleapis.com/maps/api/directions/json" +
+        return BuildConfig.MAPS_URL +
                 "?origin=" + currentLocation.latitude + "," + currentLocation.longitude +
                 "&destination=" + lugano.latitude + "," + lugano.longitude +
-                "&key=" + "AIzaSyA_Z8BF_fESeP7vfK4scnnbK9NbWdVmqME";
+                "&key=" + BuildConfig.MAPS_AUTH_KEY;
     }
 }

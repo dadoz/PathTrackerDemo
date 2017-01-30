@@ -46,16 +46,15 @@ public class LocationHelper {
                             listCallbacks.get().onDisplayLocationSuccessCallback();
                         break;
                     case RESOLUTION_REQUIRED:
-//                        Log.i(TAG, "Location settings are not satisfied. Show the user a dialog to upgrade location settings ");
                         try {
                             if (lst.get() != null)
                                 status.startResolutionForResult(lst.get(), REQUEST_CHECK_SETTINGS);
                         } catch (IntentSender.SendIntentException e) {
-                            Log.i(TAG, "PendingIntent unable to execute request.");
+                            if (listCallbacks.get() != null)
+                                listCallbacks.get().onDisplayLocationErrorCallback();
                         }
                         break;
                     case SETTINGS_CHANGE_UNAVAILABLE:
-//                        Log.i(TAG, "Location settings are inadequate, and cannot be fixed here. Dialog not created.");
                         if (listCallbacks.get() != null)
                             listCallbacks.get().onDisplayLocationErrorCallback();
                         break;

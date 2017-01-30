@@ -8,4 +8,6 @@
     <string name="auth_button_label">AUTH</string>
     <string name="bad_auth_message">Oh Snap! You\'re not authorized.</string>
     <string name="hello">Hello</string>
+    <string name="error_on_grant">Error on grant permission</string>
+    <string name="connection_error">Cannot connect to Google Place API</string>
 </resources>

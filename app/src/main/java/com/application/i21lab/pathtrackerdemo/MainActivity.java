@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 
 import com.application.i21lab.pathtrackerdemo.helpers.JsonParser;
@@ -17,6 +18,7 @@ import com.application.i21lab.pathtrackerdemo.helpers.RequestPermissionHelper;
 import com.application.i21lab.pathtrackerdemo.httpClient.NetworkTask;
 import com.application.i21lab.pathtrackerdemo.models.Direction;
 import com.application.i21lab.pathtrackerdemo.utils.MapsUtils;
+import com.application.i21lab.pathtrackerdemo.utils.Utils;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
@@ -141,11 +143,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onConnectionSuspended(int i) {
         Log.e(TAG, "hey error" + i);
+        setProgressbar(false);
+        Snackbar snackbar = Utils.getSnackBar(findViewById(R.id.layoutMainId), getString(R.string.connection_error), true);
+        if (snackbar != null)
+            snackbar.show();
     }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.e(TAG, "hey error" + connectionResult.getErrorMessage());
+        Log.e(TAG, "hey error " + connectionResult.getErrorMessage());
+        setProgressbar(false);
+        Snackbar snackbar = Utils.getSnackBar(findViewById(R.id.layoutMainId), getString(R.string.connection_error), true);
+        if (snackbar != null)
+            snackbar.show();
     }
 
 
@@ -170,12 +180,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 //        String jsonString = JsonParser.getJsonFromAssets(getAssets(), "json/direction_track.json");
         new NetworkTask(new WeakReference<NetworkTask.OnCompleteCallbacks>(this), currentLocation)
                 .execute(MapsUtils.buildUrl(currentLocation, LUGANO));
-
-        //TEST TODO rm it
-        if (lastLocation != null) {
-            latitudeView.setText(String.valueOf(lastLocation.getLatitude()));
-            longitudeView.setText(String.valueOf(lastLocation.getLongitude()));
-        }
     }
 
     @Override
@@ -185,13 +189,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public void onPermissionGrantedFailureCb() {
-        Snackbar.make(getWindow().getDecorView(), "Error on grant permission",
-                Snackbar.LENGTH_SHORT).show();
+        setProgressbar(false);
+        Snackbar snackbar = Utils.getSnackBar(findViewById(R.id.layoutMainId), getString(R.string.error_on_grant), true);
+        if (snackbar != null)
+            snackbar.show();
+
     }
 
     @Override
     public void onSuccessCb(String jsonString, LatLng currentLocation) {
         Object direction = JsonParser.parse(jsonString, "direction");
+        setProgressbar(false);
 
         if (direction != null) {
             //set polyline to handle direction
@@ -202,7 +210,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     .color(ContextCompat.getColor(getBaseContext(), R.color.colorPrimary))
                     .geodesic(true));
         }
+    }
 
-
+    public void setProgressbar(boolean isSet) {
+        View view = findViewById(R.id.mapProgressbarId);
+        if (view != null)
+            view.setVisibility(isSet ? View.VISIBLE : View.GONE);
     }
 }

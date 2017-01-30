@@ -34,24 +34,20 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 
-import static android.content.Context.KEYGUARD_SERVICE;
 
 public class FingerprintManager extends FingerprintManagerCompat.AuthenticationCallback implements AuthManager  {
     private final WeakReference<AuthManager.Callbacks> listener;
-    private final KeyguardManager keyguardManager;
     private Cipher cipher;
     private KeyStore keyStore;
     private static final String KEY_NAME = "pathtrackerdemo_key";
 
     public FingerprintManager(WeakReference<AuthManager.Callbacks> lst, Context context) {
         listener = lst;
-        keyguardManager = (KeyguardManager) context.getSystemService(KEYGUARD_SERVICE);
     }
 
     @Override
     public void auth(WeakReference<Context> context, int code) {
         try {
-//            Toast.makeText(context.get(), "hey auth", Toast.LENGTH_SHORT).show();
             initKeyGeneration();
             if (!initCipher()) {
                 if (listener.get() != null) {
@@ -60,7 +56,6 @@ public class FingerprintManager extends FingerprintManagerCompat.AuthenticationC
                 return;
             }
 
-//            Toast.makeText(context.get(), "hey auth 1", Toast.LENGTH_SHORT).show();
             FingerprintManagerCompat.CryptoObject cryptoObject = new FingerprintManagerCompat.CryptoObject(cipher);
             FingerprintManagerCompat.from(context.get()).authenticate (cryptoObject, 0,
                     new CancellationSignal(), this, null);

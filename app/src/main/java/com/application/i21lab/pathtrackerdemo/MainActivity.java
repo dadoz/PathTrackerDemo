@@ -30,7 +30,9 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import java.lang.ref.WeakReference;
 
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
+import static android.Manifest.permission.USE_FINGERPRINT;
 import static com.application.i21lab.pathtrackerdemo.helpers.RequestPermissionHelper.COARSE_LOCATION_REQUEST_CODE;
+import static com.application.i21lab.pathtrackerdemo.helpers.RequestPermissionHelper.FINGERPRINT_REQUEST_CODE;
 
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
@@ -52,7 +54,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         setContentView(R.layout.activity_main);
         getSupportActionBar().setTitle("map");
 
-        initMap();
+        RequestPermissionHelper.requestPermission(new WeakReference<Activity>(this),
+                USE_FINGERPRINT, FINGERPRINT_REQUEST_CODE);
+
+            initMap();
         buildGoogleApiClient();
         initView();
     }
@@ -148,12 +153,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
      *
      */
     private void setLocationOnMap() {
-        lastLocation = LocationServices.FusedLocationApi.getLastLocation(client);
-        map.setMyLocationEnabled(true);
         if (lastLocation == null ||
                 map == null) {
             return;
         }
+        lastLocation = LocationServices.FusedLocationApi.getLastLocation(client);
+        map.setMyLocationEnabled(true);
 
         //set up current location
         LatLng currentLocation = new LatLng(lastLocation.getLatitude(),lastLocation.getLongitude());

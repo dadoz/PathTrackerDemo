@@ -1,5 +1,6 @@
 package com.application.i21lab.pathtrackerdemo.factory;
 
+import android.app.KeyguardManager;
 import android.content.Context;
 import android.support.v4.hardware.fingerprint.FingerprintManagerCompat;
 
@@ -17,7 +18,7 @@ public class AuthFactory {
                                              WeakReference<AuthManager.Callbacks> lst) {
         if (context.get() != null &&
                 isFingerprintEnabled(context)) {
-            return new FingerprintManager(lst);
+            return new FingerprintManager(lst, context.get());
         }
         return new PincodeManager(lst);
     }
@@ -31,6 +32,7 @@ public class AuthFactory {
         return context.get() != null &&
                 FingerprintManagerCompat.from(context.get()).isHardwareDetected() &&
                 FingerprintManagerCompat.from(context.get())
-                    .hasEnrolledFingerprints();
+                    .hasEnrolledFingerprints() &&
+                ((KeyguardManager) context.get().getSystemService(Context.KEYGUARD_SERVICE)).isKeyguardSecure();
     }
 }

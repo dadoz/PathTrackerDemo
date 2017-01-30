@@ -2,6 +2,7 @@ package com.application.i21lab.pathtrackerdemo;
 
 import android.*;
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -14,6 +15,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.content.PermissionChecker;
 import android.support.v4.hardware.fingerprint.FingerprintManagerCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -35,6 +37,7 @@ public class AuthenticationActivity extends AppCompatActivity implements AuthMan
         View.OnClickListener,  RequestPermissionHelper.RequestPermissionCallbacks {
 
     private AuthManager authManager;
+    private String TAG = "AuthActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,12 +73,12 @@ public class AuthenticationActivity extends AppCompatActivity implements AuthMan
     /**
      *
      */
+    @TargetApi(Build.VERSION_CODES.M)
     public void initViewFingerprint() {
-        if (Build.VERSION.SDK_INT < 23) {
-            return; //switch on pincode mode
+        if (!RequestPermissionHelper.requestPermission(new WeakReference<Activity>(this), USE_FINGERPRINT,
+                FINGERPRINT_REQUEST_CODE)) {
+            onPermissionGrantedSuccessCb();
         }
-        RequestPermissionHelper.requestPermission(new WeakReference<Activity>(this), USE_FINGERPRINT,
-                FINGERPRINT_REQUEST_CODE);
     }
 
     @Override
@@ -93,6 +96,9 @@ public class AuthenticationActivity extends AppCompatActivity implements AuthMan
             String msg = message == null ? getString(R.string.bad_auth_message) : message;
             Snackbar snackbar = Snackbar.make(getWindow().getDecorView().findViewById(R.id.mainLayoutId),
                     msg, Snackbar.LENGTH_LONG);
+            snackbar.getView().setBackgroundColor(ContextCompat.getColor(getApplicationContext(), R.color.grey_50));
+            ((TextView) snackbar.getView().findViewById(R.id.snackbar_text))
+                    .setTextColor(ContextCompat.getColor(getApplicationContext(), R.color.colorPrimary));
             snackbar.show();
         } catch (Exception e) {
             e.printStackTrace();
@@ -108,7 +114,7 @@ public class AuthenticationActivity extends AppCompatActivity implements AuthMan
                 int code = editText.getText().toString().equals("") ? -1 :
                         Integer.parseInt(editText.getText().toString());
                 authManager.auth(new WeakReference<Context>(getApplicationContext()), code);
-                Utils.hideKeyboard(getApplicationContext());
+                Utils.hideKeyboard(getApplicationContext(), getCurrentFocus());
                 break;
         }
     }
@@ -122,12 +128,15 @@ public class AuthenticationActivity extends AppCompatActivity implements AuthMan
 
     @Override
     public void onPermissionGrantedSuccessCb() {
+        Log.e(TAG, "OK");
         if (authManager != null)
             authManager.auth(new WeakReference<Context>(getApplicationContext()), -1);
     }
 
     @Override
     public void onPermissionGrantedFailureCb() {
+
+        Log.e(TAG, "error");
         authFailedCallback(null);
     }
 }

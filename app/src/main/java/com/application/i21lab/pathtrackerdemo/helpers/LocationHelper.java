@@ -14,11 +14,9 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
-import com.google.android.gms.location.LocationSettingsStatusCodes;
 
 import java.lang.ref.WeakReference;
 
-import static android.content.ContentValues.TAG;
 import static com.google.android.gms.location.LocationSettingsStatusCodes.*;
 
 public class LocationHelper {
@@ -29,8 +27,8 @@ public class LocationHelper {
                                                       final WeakReference<Activity> lst, final WeakReference<DisplayLocationCallbacks> listCallbacks) {
         LocationRequest locationRequest = LocationRequest.create();
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequest.setInterval(10000);
-        locationRequest.setFastestInterval(10000 / 2);
+        locationRequest.setInterval(1000);
+        locationRequest.setFastestInterval(1000 / 2);
 
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder().addLocationRequest(locationRequest);
         builder.setAlwaysShow(true);

@@ -2,8 +2,12 @@ package com.application.i21lab.pathtrackerdemo;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.location.Location;
+import android.net.Uri;
 import android.os.Handler;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -11,6 +15,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Toast;
@@ -19,8 +24,8 @@ import com.application.i21lab.pathtrackerdemo.helpers.ConnectionStatusHelper;
 import com.application.i21lab.pathtrackerdemo.helpers.JsonParser;
 import com.application.i21lab.pathtrackerdemo.helpers.LocationHelper;
 import com.application.i21lab.pathtrackerdemo.helpers.RequestPermissionHelper;
-import com.application.i21lab.pathtrackerdemo.httpClient.NetworkTask;
 import com.application.i21lab.pathtrackerdemo.models.Direction;
+import com.application.i21lab.pathtrackerdemo.service.RetrieveDirectionService;
 import com.application.i21lab.pathtrackerdemo.utils.MapsUtils;
 import com.application.i21lab.pathtrackerdemo.utils.Utils;
 import com.google.android.gms.common.ConnectionResult;
@@ -39,11 +44,13 @@ import java.lang.ref.WeakReference;
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static com.application.i21lab.pathtrackerdemo.helpers.LocationHelper.REQUEST_CHECK_SETTINGS;
 import static com.application.i21lab.pathtrackerdemo.helpers.RequestPermissionHelper.COARSE_LOCATION_REQUEST_CODE;
+import static com.application.i21lab.pathtrackerdemo.service.RetrieveDirectionService.BROADCAST_ACTION;
+import static com.application.i21lab.pathtrackerdemo.service.RetrieveDirectionService.RESULT_DIRECTION_DATA;
 
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
-        RequestPermissionHelper.RequestPermissionCallbacks, NetworkTask.OnCompleteCallbacks, LocationHelper.DisplayLocationCallbacks {
+        RequestPermissionHelper.RequestPermissionCallbacks, LocationHelper.DisplayLocationCallbacks {
 
     private GoogleMap map;
     private GoogleApiClient client;
@@ -56,6 +63,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Direction direction;
     private LatLng currentLocation;
     private Bundle stateBundle;
+    private ResponseReceiver broadcastReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +72,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         getSupportActionBar().setTitle(R.string.map_title);
         stateBundle = savedInstanceState;
 
+        // Registers the DownloadStateReceiver and its intent filters
+        IntentFilter statusIntentFilter = new IntentFilter(BROADCAST_ACTION);
+        broadcastReceiver = new ResponseReceiver();
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, statusIntentFilter);
+        //init view
         initView();
     }
 
@@ -130,10 +143,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onStop() {
         super.onStop();
-
-        if (client != null) {
+        if (client != null)
             client.disconnect();
-        }
+
+        if (broadcastReceiver != null)
+            LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
+
     }
 
     @Override
@@ -187,8 +202,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             setCurrentLocationOnMap();
 
             //retrieve direction
-            new NetworkTask(new WeakReference<NetworkTask.OnCompleteCallbacks>(this), currentLocation)
-                    .execute(MapsUtils.buildUrl(currentLocation, ZURICH));
+            String dataUrl = MapsUtils.buildUrl(currentLocation, ZURICH);
+
+            Intent intent = new Intent(this, RetrieveDirectionService.class);
+            intent.setData(Uri.parse(dataUrl));
+            startService(intent);
+//            new NetworkTask(new WeakReference<NetworkTask.OnCompleteCallbacks>(this), currentLocation)
+//                    .execute(MapsUtils.buildUrl(currentLocation, ZURICH));
         }
     }
 
@@ -237,8 +257,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
-    @Override
-    public void onSuccessCb(String jsonString, LatLng currLoc) {
+    /**
+     * on success cb
+     * @param jsonString
+     */
+    public void onSuccessCb(String jsonString) {
         Object decodedDirection = JsonParser.parse(jsonString, "direction");
         if (decodedDirection != null) {
             direction = (Direction) decodedDirection;
@@ -293,5 +316,28 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 getString(R.string.no_internet_connection), true, Snackbar.LENGTH_INDEFINITE);
         if (snackbar != null)
             snackbar.show();
+    }
+
+    /**
+     * Broadcast Receiver to handle http req
+     */
+    private class ResponseReceiver extends BroadcastReceiver
+    {
+        // Prevents instantiation
+        private ResponseReceiver() {
+        }
+
+        // Called when the BroadcastReceiver gets an Intent it's registered to receive
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            //handling intent
+            String jsonString = intent.getExtras().get(RESULT_DIRECTION_DATA).toString();
+            if (jsonString == null) {
+                onPermissionGrantedFailureCb();
+                return;
+            }
+
+            onSuccessCb(jsonString);
+        }
     }
 }

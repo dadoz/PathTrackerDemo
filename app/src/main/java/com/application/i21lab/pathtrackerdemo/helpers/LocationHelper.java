@@ -1,0 +1,71 @@
+package com.application.i21lab.pathtrackerdemo.helpers;
+
+import android.app.Activity;
+import android.content.Context;
+import android.content.IntentSender;
+import android.util.Log;
+
+import com.application.i21lab.pathtrackerdemo.MainActivity;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResult;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
+
+import java.lang.ref.WeakReference;
+
+import static android.content.ContentValues.TAG;
+import static com.google.android.gms.location.LocationSettingsStatusCodes.*;
+
+public class LocationHelper {
+
+    public static final int REQUEST_CHECK_SETTINGS = 111;
+
+    public static void displayLocationSettingsRequest(GoogleApiClient googleApiClient,
+                                                      final WeakReference<Activity> lst, final WeakReference<DisplayLocationCallbacks> listCallbacks) {
+        LocationRequest locationRequest = LocationRequest.create();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(10000);
+        locationRequest.setFastestInterval(10000 / 2);
+
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder().addLocationRequest(locationRequest);
+        builder.setAlwaysShow(true);
+
+        PendingResult<LocationSettingsResult> result = LocationServices.SettingsApi.checkLocationSettings(googleApiClient, builder.build());
+        result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+            @Override
+            public void onResult(LocationSettingsResult result) {
+                final Status status = result.getStatus();
+                switch (status.getStatusCode()) {
+                    case SUCCESS:
+                        if (listCallbacks.get() != null)
+                            listCallbacks.get().onDisplayLocationSuccessCallback();
+                        break;
+                    case RESOLUTION_REQUIRED:
+//                        Log.i(TAG, "Location settings are not satisfied. Show the user a dialog to upgrade location settings ");
+                        try {
+                            if (lst.get() != null)
+                                status.startResolutionForResult(lst.get(), REQUEST_CHECK_SETTINGS);
+                        } catch (IntentSender.SendIntentException e) {
+                            Log.i(TAG, "PendingIntent unable to execute request.");
+                        }
+                        break;
+                    case SETTINGS_CHANGE_UNAVAILABLE:
+//                        Log.i(TAG, "Location settings are inadequate, and cannot be fixed here. Dialog not created.");
+                        if (listCallbacks.get() != null)
+                            listCallbacks.get().onDisplayLocationErrorCallback();
+                        break;
+                }
+            }
+        });
+    }
+
+    public interface DisplayLocationCallbacks {
+        void onDisplayLocationSuccessCallback();
+        void onDisplayLocationErrorCallback();
+    }
+}

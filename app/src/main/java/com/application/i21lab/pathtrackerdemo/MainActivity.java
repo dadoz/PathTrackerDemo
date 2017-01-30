@@ -2,20 +2,22 @@ package com.application.i21lab.pathtrackerdemo;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.pm.PackageManager;
-import android.graphics.Path;
+import android.content.Intent;
 import android.location.Location;
+import android.os.Handler;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
+import android.widget.Toast;
 
+import com.application.i21lab.pathtrackerdemo.helpers.ConnectionStatusHelper;
 import com.application.i21lab.pathtrackerdemo.helpers.JsonParser;
+import com.application.i21lab.pathtrackerdemo.helpers.LocationHelper;
 import com.application.i21lab.pathtrackerdemo.helpers.RequestPermissionHelper;
 import com.application.i21lab.pathtrackerdemo.httpClient.NetworkTask;
 import com.application.i21lab.pathtrackerdemo.models.Direction;
@@ -34,12 +36,13 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import java.lang.ref.WeakReference;
 
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
+import static com.application.i21lab.pathtrackerdemo.helpers.LocationHelper.REQUEST_CHECK_SETTINGS;
 import static com.application.i21lab.pathtrackerdemo.helpers.RequestPermissionHelper.COARSE_LOCATION_REQUEST_CODE;
 
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
-        RequestPermissionHelper.RequestPermissionCallbacks, NetworkTask.OnCompleteCallbacks {
+        RequestPermissionHelper.RequestPermissionCallbacks, NetworkTask.OnCompleteCallbacks, LocationHelper.DisplayLocationCallbacks {
 
     private GoogleMap map;
     private GoogleApiClient client;
@@ -49,6 +52,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final LatLng LUGANO = new LatLng(46.03629, 8.954198);
     private String DIRECTION_BUNDLE_KEY = "DIRECTION_BUNDLE_KEY";
     private static final String CURRENT_LOCATION_BUNDLE_KEY = "CURRENT_LOCATION_BUNDLE_KEY";
+    private static final int WIFI_REQ_CODE = 222;
     private Direction direction;
     private LatLng currentLocation;
     private Bundle stateBundle;
@@ -60,6 +64,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         getSupportActionBar().setTitle(R.string.map_title);
         stateBundle = savedInstanceState;
 
+        initView();
+    }
+
+    /**
+     *
+     */
+    private void initView() {
+        if (!ConnectionStatusHelper.isNetworkAvailable(getApplicationContext())) {
+            onConnectionNotEnabled();
+            return;
+        }
         initMap();
         buildGoogleApiClient();
     }
@@ -125,24 +140,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             return;
         }
 
-        initLocationOnMap();
+        LocationHelper.displayLocationSettingsRequest(client, new WeakReference<Activity>(this),
+                new WeakReference<LocationHelper.DisplayLocationCallbacks>(this));
+//        initLocationOnMap();
     }
 
 
     @Override
     public void onConnectionSuspended(int i) {
-        Log.e(TAG, "hey error" + i);
         setProgressbar(false);
-        Snackbar snackbar = Utils.getSnackBar(findViewById(R.id.layoutMainId), getString(R.string.connection_error), true);
+        Snackbar snackbar = Utils.getSnackBar(findViewById(R.id.layoutMainId),
+                getString(R.string.connection_error), true, Snackbar.LENGTH_SHORT);
         if (snackbar != null)
             snackbar.show();
     }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.e(TAG, "hey error " + connectionResult.getErrorMessage());
         setProgressbar(false);
-        Snackbar snackbar = Utils.getSnackBar(findViewById(R.id.layoutMainId), getString(R.string.connection_error), true);
+        Snackbar snackbar = Utils.getSnackBar(findViewById(R.id.layoutMainId),
+                getString(R.string.connection_error), true, Snackbar.LENGTH_SHORT);
         if (snackbar != null)
             snackbar.show();
     }
@@ -152,17 +169,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
      *
      */
     private void initLocationOnMap() {
-        Log.e(TAG, "Hey" + (stateBundle != null ? "bundle" : "empty"));
-
         if (stateBundle != null) {
             setCurrentLocationOnMap();
             handlePlotDirection();
             return;
         }
 
-        lastLocation = LocationServices.FusedLocationApi.getLastLocation(client);
+        if (client != null)
+            lastLocation = LocationServices.FusedLocationApi.getLastLocation(client);
+
         if (lastLocation != null) {
-            Log.e(TAG, "Hey");
             //set up current location
             currentLocation = new LatLng(lastLocation.getLatitude(),lastLocation.getLongitude());
             setCurrentLocationOnMap();
@@ -200,17 +216,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     .color(ContextCompat.getColor(getBaseContext(), R.color.colorPrimary))
                     .geodesic(true));
         }
-
     }
+
     @Override
     public void onPermissionGrantedSuccessCb() {
-        initLocationOnMap();
+        LocationHelper.displayLocationSettingsRequest(client, new WeakReference<Activity>(this),
+                new WeakReference<LocationHelper.DisplayLocationCallbacks>(this));
+//        initLocationOnMap();
     }
 
     @Override
     public void onPermissionGrantedFailureCb() {
         setProgressbar(false);
-        Snackbar snackbar = Utils.getSnackBar(findViewById(R.id.layoutMainId), getString(R.string.error_on_grant), true);
+        Snackbar snackbar = Utils.getSnackBar(findViewById(R.id.layoutMainId), getString(R.string.error_on_grant), true, Snackbar.LENGTH_SHORT);
         if (snackbar != null)
             snackbar.show();
 
@@ -225,12 +243,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-
-
     public void setProgressbar(boolean isSet) {
         View view = findViewById(R.id.mapProgressbarId);
         if (view != null)
             view.setVisibility(isSet ? View.VISIBLE : View.GONE);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CHECK_SETTINGS) {
+            initLocationOnMap();
+        }
     }
 
     @Override
@@ -245,5 +269,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onRestoreInstanceState(savedInstanceState);
         direction = (Direction) savedInstanceState.get(DIRECTION_BUNDLE_KEY);
         currentLocation = (LatLng) savedInstanceState.get(CURRENT_LOCATION_BUNDLE_KEY);
+    }
+
+    @Override
+    public void onDisplayLocationSuccessCallback() {
+        initLocationOnMap();
+    }
+
+    @Override
+    public void onDisplayLocationErrorCallback() {
+        onPermissionGrantedFailureCb();
+    }
+
+    /**
+     * on connection not enabled handler
+     */
+    private void onConnectionNotEnabled() {
+        setProgressbar(false);
+        Snackbar snackbar = Utils.getSnackBar(findViewById(R.id.layoutMainId),
+                getString(R.string.no_internet_connection), true, Snackbar.LENGTH_INDEFINITE);
+        if (snackbar != null)
+            snackbar.show();
     }
 }

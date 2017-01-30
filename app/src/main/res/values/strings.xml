@@ -11,4 +11,6 @@
     <string name="error_on_grant">Error on grant permission</string>
     <string name="connection_error">Cannot connect to Google Place API</string>
     <string name="map_title">Map</string>
+    <string name="no_internet_connection">No internet connection!</string>
+    <string name="ENABLE_CONNECTION">ENABLE</string>
 </resources>

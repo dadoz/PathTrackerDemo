@@ -19,9 +19,35 @@ public class Utils {
         }
     }
 
-    public static  Snackbar getSnackBar(@NonNull View view, String message, boolean isError) {
+    /**
+     *
+     * @param view
+     * @param message
+     * @param isError
+     * @param action
+     * @param listener
+     * @return
+     */
+    public static  Snackbar getSnackBarWithAction(@NonNull View view, String message, boolean isError,
+                                                  String action, View.OnClickListener listener) {
+        Snackbar snackbar = getSnackBar(view, message, isError, Snackbar.LENGTH_INDEFINITE);
+        if (snackbar != null) {
+            snackbar.setAction(action, listener);
+        }
+        return snackbar;
+    }
+
+    /**
+     *
+     * @param view
+     * @param message
+     * @param isError
+     * @param length
+     * @return
+     */
+    public static  Snackbar getSnackBar(@NonNull View view, String message, boolean isError, int length) {
         if (view != null) {
-            Snackbar snackbar = Snackbar.make(view, message, Snackbar.LENGTH_SHORT);
+            Snackbar snackbar = Snackbar.make(view, message, length);
             snackbar.getView().setBackgroundResource(isError ? R.color.colorPrimary : R.color.grey_900);
             return snackbar;
         }

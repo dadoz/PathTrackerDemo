@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private Location lastLocation;
     private String TAG = "TAG";
 
-    private static final LatLng LUGANO = new LatLng(46.03629, 8.954198);
+    private static final LatLng ZURICH = new LatLng(47.3673, 8.55);
     private String DIRECTION_BUNDLE_KEY = "DIRECTION_BUNDLE_KEY";
     private static final String CURRENT_LOCATION_BUNDLE_KEY = "CURRENT_LOCATION_BUNDLE_KEY";
     private Direction direction;
@@ -115,8 +115,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(GoogleMap googleMap) {
         map = googleMap;
         map.addMarker(new MarkerOptions()
-                .position(LUGANO)
-                .title(getString(R.string.lugano_position)));
+                .position(ZURICH)
+                .title(getString(R.string.zurich_position)));
     }
 
     @Override
@@ -188,7 +188,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             //retrieve direction
             new NetworkTask(new WeakReference<NetworkTask.OnCompleteCallbacks>(this), currentLocation)
-                    .execute(MapsUtils.buildUrl(currentLocation, LUGANO));
+                    .execute(MapsUtils.buildUrl(currentLocation, ZURICH));
         }
     }
 

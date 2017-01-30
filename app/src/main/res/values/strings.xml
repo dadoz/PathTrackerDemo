@@ -7,11 +7,11 @@
     <string name="pincode_label">Insert your pin code to get logged in.</string>
     <string name="auth_button_label">AUTH</string>
     <string name="bad_auth_message">Oh Snap! You\'re not authorized.</string>
-    <string name="hello">Hello</string>
+    <string name="hello">Welcome\!</string>
     <string name="error_on_grant">Error on grant permission</string>
     <string name="connection_error">Cannot connect to Google Place API</string>
     <string name="map_title">Map</string>
     <string name="no_internet_connection">No internet connection!</string>
     <string name="ENABLE_CONNECTION">ENABLE</string>
-    <string name="lugano_position">Lugano</string>
+    <string name="zurich_position">Zurich</string>
 </resources>

@@ -222,7 +222,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         map.setMyLocationEnabled(true);
         //set position on my current location
         map.moveCamera(CameraUpdateFactory.newLatLng(currentLocation));
-        map.setMinZoomPreference(8);
+        map.setMinZoomPreference(7);
     }
 
     /**
